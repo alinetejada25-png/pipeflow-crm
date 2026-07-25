@@ -64,10 +64,24 @@ Supabase, ainda sem identidade visual aplicada (componentes shadcn padrão).
 
 **Entregas:**
 
-- [ ] Listagem de leads com busca e filtros (status, responsável, data) — _Colaborador: Frontend_
+- [x] Listagem de leads com busca e filtros (status, responsável, data) — _Colaborador: Frontend_
+  - [x] Tabela de leads com busca (nome/e-mail/empresa), filtro por status,
+    responsável (membros do workspace) e por período de criação implementada
 - [ ] Formulário de cadastro/edição de lead (nome, e-mail, telefone, empresa, cargo) — _Colaborador: Frontend_
+  - [x] Dialog de criação/edição implementado com validação de nome/e-mail
 - [ ] Página de detalhe do lead com timeline de atividades — _Colaborador: Frontend_
+  - [x] Página de detalhe implementada com timeline somente leitura (registro de
+    atividade é escopo da Milestone 4)
 - [ ] Server Actions de CRUD de leads (isolados por `workspace_id`) — _Colaborador: Backend_
+  - [x] `listLeads`/`getLead`/`createLead`/`updateLead`/`deleteLead`/`listWorkspaceMembers`
+    implementados em `app/(dashboard)/leads/actions.ts` com **dados fake em memória**
+    (`lib/leads/mock-data.ts`, 12 leads brasileiros) para destravar a interface sem
+    depender de um projeto Supabase configurado
+  - [ ] **Pendente:** trocar o data source fake pelo Supabase real (tabelas
+    `leads`/`activities`/`workspace_members` filtradas por `workspace_id`) assim que
+    `.env.local` tiver `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    preenchidos e a Milestone 1 tiver auth real (`DEV_WORKSPACE_ID`/`DEV_USER_ID` hoje
+    não são mais usados pelos leads)
 
 **Commit final:** `feat: leads CRUD ui with search and filters`
 
