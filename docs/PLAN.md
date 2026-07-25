@@ -43,9 +43,14 @@ automaticamente — base para todas as telas de interface seguintes.
 **Entregas:**
 
 - [ ] Telas de login/signup (`/(auth)`) usando Supabase Auth — _Colaborador: Frontend_
+  - [x] UI implementada (`/(auth)/login`, `/(auth)/signup`, `/(auth)/onboarding`) com
+    validação de campos, estados de loading nos botões e mensagens de erro —
+    navegação ainda fake (sem integração real com Supabase Auth)
 - [ ] Middleware de proteção de rotas do `/(dashboard)` — _Colaborador: Backend_
 - [ ] Criação automática de workspace + registro do usuário como `admin` no signup — _Colaborador: Backend_
-- [ ] Layout base do dashboard (sidebar, header, área de conteúdo) — _Colaborador: Frontend_
+  - [x] Tela de onboarding (nome do workspace) implementada, redirecionando para o
+    dashboard — ainda sem criação real de workspace no Supabase
+- [x] Layout base do dashboard (sidebar, header, área de conteúdo) — _Colaborador: Frontend_
 
 **Commit final:** `feat: auth flow and default workspace bootstrap`
 
