@@ -23,12 +23,12 @@ começar a codar sem trabalho de infraestrutura.
 
 **Entregas:**
 
-- [ ] Inicializar Next.js 14 (App Router) + TypeScript 5 — _Colaborador: Dev (Claude Code)_
-- [ ] Configurar Tailwind CSS + shadcn/ui (tema padrão, sem cores de marca ainda) — _Colaborador: Dev (Claude Code)_
-- [ ] Configurar ESLint/Prettier e scripts de lint/format — _Colaborador: Dev (Claude Code)_
-- [ ] Criar projeto no Supabase (dev) e schema inicial: `workspaces`, `workspace_members`, `leads`, `deals`, `activities` — _Colaborador: Backend_
-- [ ] Configurar `.env.local` / `.env.example` com chaves Supabase, Stripe, Resend, WhatsApp — _Colaborador: Dev (Claude Code)_
-- [ ] Configurar repositório Git + primeiro push para GitHub — _Colaborador: Dev (Claude Code)_
+- [x] Inicializar Next.js 14 (App Router) + TypeScript 5 — _Colaborador: Dev (Claude Code)_
+- [x] Configurar Tailwind CSS + shadcn/ui (tema padrão, sem cores de marca ainda) — _Colaborador: Dev (Claude Code)_
+- [x] Configurar ESLint/Prettier e scripts de lint/format — _Colaborador: Dev (Claude Code)_
+- [x] Criar projeto no Supabase (dev) e schema inicial: `workspaces`, `workspace_members`, `leads`, `deals`, `activities` — _Colaborador: Backend_
+- [x] Configurar `.env.local` / `.env.example` com chaves Supabase, Stripe, Resend, WhatsApp — _Colaborador: Dev (Claude Code)_
+- [x] Configurar repositório Git + primeiro push para GitHub — _Colaborador: Dev (Claude Code)_
 
 **Commit final:** `chore: project setup (next.js, tailwind, shadcn, supabase schema)`
 
