@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,7 +27,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   function validate(): FormErrors {
     const nextErrors: FormErrors = {};
@@ -64,8 +67,50 @@ export default function SignupPage() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    router.push("/onboarding");
+    setFormError(null);
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+      },
+    });
+
+    if (error) {
+      setFormError(
+        error.message.includes("already registered")
+          ? "Este e-mail já está cadastrado."
+          : "Não foi possível criar sua conta. Tente novamente.",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (data.session) {
+      router.push("/onboarding");
+      router.refresh();
+      return;
+    }
+
+    setConfirmationSent(true);
+    setIsSubmitting(false);
+  }
+
+  if (confirmationSent) {
+    return (
+      <Card>
+        <CardHeader>
+          <MailCheck className="h-8 w-8 text-muted-foreground" />
+          <CardTitle>Confirme seu e-mail</CardTitle>
+          <CardDescription>
+            Enviamos um link de confirmação para {email}. Clique nele para continuar o cadastro.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
   return (
@@ -76,6 +121,8 @@ export default function SignupPage() {
       </CardHeader>
       <CardContent>
         <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {formError ? <p className="text-sm text-destructive">{formError}</p> : null}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Nome</Label>
             <Input

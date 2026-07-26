@@ -7,8 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { UserNav } from "@/components/dashboard/user-nav";
+import type { CurrentUserProfile, WorkspaceSummary } from "@/lib/supabase/workspace";
 
-export function Header() {
+interface HeaderProps {
+  user: CurrentUserProfile;
+  workspaces: WorkspaceSummary[];
+  activeWorkspaceId: string;
+}
+
+export function Header({ user, workspaces, activeWorkspaceId }: HeaderProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -16,7 +23,11 @@ export function Header() {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" className="w-72 p-0">
           <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
-          <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+          <Sidebar
+            workspaces={workspaces}
+            activeWorkspaceId={activeWorkspaceId}
+            onNavigate={() => setMobileNavOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -32,7 +43,7 @@ export function Header() {
 
       <div className="flex-1" />
 
-      <UserNav />
+      <UserNav user={user} />
     </header>
   );
 }

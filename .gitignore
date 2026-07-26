@@ -25,6 +25,7 @@
 *.pem
 npm-debug.log*
 next-env.d.ts
+tsconfig.tsbuildinfo
 
 # unrelated local installer artifacts (not part of the app)
 /Claude Setup.exe

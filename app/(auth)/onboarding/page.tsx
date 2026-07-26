@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -9,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { createWorkspace } from "./actions";
+
 interface FormErrors {
   workspaceName?: string;
 }
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [workspaceName, setWorkspaceName] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,8 +39,11 @@ export default function OnboardingPage() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    router.push("/dashboard");
+    const result = await createWorkspace(workspaceName.trim());
+    if (result?.error) {
+      setErrors({ workspaceName: result.error });
+      setIsSubmitting(false);
+    }
   }
 
   return (
