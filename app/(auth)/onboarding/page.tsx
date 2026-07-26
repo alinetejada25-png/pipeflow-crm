@@ -40,7 +40,7 @@ export default function OnboardingPage() {
 
     setIsSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 800));
-    router.push("/leads");
+    router.push("/dashboard");
   }
 
   return (

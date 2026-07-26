@@ -12,7 +12,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2 px-4">
-        <Link href="/leads" onClick={onNavigate} className="flex items-center gap-2 font-semibold">
+        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 font-semibold">
           <Waypoints className="h-5 w-5" />
           PipeFlow
         </Link>
