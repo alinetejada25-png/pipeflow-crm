@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 
-import { MOCK_CURRENT_USER } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
+import type { CurrentUserProfile } from "@/lib/supabase/workspace";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,8 +25,19 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export function UserNav() {
-  const user = MOCK_CURRENT_USER;
+interface UserNavProps {
+  user: CurrentUserProfile;
+}
+
+export function UserNav({ user }: UserNavProps) {
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <DropdownMenu>
@@ -52,7 +65,7 @@ export function UserNav() {
           Configurações do workspace
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2">
+        <DropdownMenuItem className="gap-2" onClick={handleSignOut}>
           <LogOut className="h-4 w-4" />
           Sair
         </DropdownMenuItem>
