@@ -161,10 +161,13 @@ sobre toda a interface já funcional, sem alterar comportamento.
 
 **Entregas:**
 
-- [ ] Seção Hero — _Colaborador: Frontend_
-- [ ] Seção Funcionalidades — _Colaborador: Frontend_
-- [ ] Seção Planos e Preços — _Colaborador: Frontend_
-- [ ] Seção CTA + rodapé — _Colaborador: Frontend_
+- [x] Seção Hero — _Colaborador: Frontend_
+- [x] Seção Funcionalidades — _Colaborador: Frontend_
+- [x] Seção Planos e Preços — _Colaborador: Frontend_
+- [x] Seção CTA + rodapé — _Colaborador: Frontend_
+  - [x] Header com navegação e menu mobile, 4 números de resultado e cores
+    indigo-600 aplicadas nesta página (marca completa do dashboard ainda é a
+    Milestone 6)
 
 **Commit final:** `feat: public landing page`
 
