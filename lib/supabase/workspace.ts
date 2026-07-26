@@ -11,7 +11,7 @@ interface CurrentWorkspace {
  * Quando a auth real existir, isso passa a ler a sessão do Supabase Auth.
  */
 export async function getCurrentWorkspace(): Promise<CurrentWorkspace> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
