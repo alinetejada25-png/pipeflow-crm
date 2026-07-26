@@ -27,7 +27,14 @@ começar a codar sem trabalho de infraestrutura.
 - [x] Configurar Tailwind CSS + shadcn/ui (tema padrão, sem cores de marca ainda) — _Colaborador: Dev (Claude Code)_
 - [x] Configurar ESLint/Prettier e scripts de lint/format — _Colaborador: Dev (Claude Code)_
 - [x] Criar projeto no Supabase (dev) e schema inicial: `workspaces`, `workspace_members`, `leads`, `deals`, `activities` — _Colaborador: Backend_
+  - [x] Projeto cloud `pipeflow` (ref `klouvqutcibpbvgaphxz`) criado e migration
+    `20260725000000_init_schema.sql` aplicada; RLS ainda não habilitado
+    (escopo da Milestone 5)
 - [x] Configurar `.env.local` / `.env.example` com chaves Supabase, Stripe, Resend, WhatsApp — _Colaborador: Dev (Claude Code)_
+  - [x] `.env.local` preenchido com URL + chaves reais do Supabase (novo formato
+    `sb_publishable_*` / `sb_secret_*`) e `DEV_WORKSPACE_ID`/`DEV_USER_ID`
+    apontando para um workspace e usuário de dev seedados via Auth Admin API;
+    demais integrações (Stripe/Resend/WhatsApp) seguem pendentes de chaves
 - [x] Configurar repositório Git + primeiro push para GitHub — _Colaborador: Dev (Claude Code)_
 
 **Commit final:** `chore: project setup (next.js, tailwind, shadcn, supabase schema)`
