@@ -4,9 +4,11 @@
 //   - 20260726000000_add_subscriptions.sql (subscriptions)
 //   - 20260726010000_enable_rls.sql (RPC create_workspace)
 //   - 20260726020000_add_profiles.sql (profiles)
+//   - 20260726030000_add_workspace_invites.sql (workspace_invites, RPCs de convite)
 
 export type WorkspacePlan = "free" | "pro";
 export type WorkspaceMemberRole = "admin" | "membro";
+export type WorkspaceInviteStatus = "pending" | "accepted" | "revoked";
 export type LeadSource = "manual" | "whatsapp";
 export type DealStage =
   | "novo_lead"
@@ -264,6 +266,50 @@ export interface Database {
         };
         Relationships: [];
       };
+      workspace_invites: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          email: string;
+          role: WorkspaceMemberRole;
+          token: string;
+          invited_by: string | null;
+          status: WorkspaceInviteStatus;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          email: string;
+          role?: WorkspaceMemberRole;
+          token?: string;
+          invited_by?: string | null;
+          status?: WorkspaceInviteStatus;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          email?: string;
+          role?: WorkspaceMemberRole;
+          token?: string;
+          invited_by?: string | null;
+          status?: WorkspaceInviteStatus;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       subscriptions: {
         Row: {
           id: string;
@@ -328,6 +374,20 @@ export interface Database {
       is_workspace_admin: {
         Args: { p_workspace_id: string };
         Returns: boolean;
+      };
+      get_invite_preview: {
+        Args: { p_token: string };
+        Returns: {
+          workspace_name: string | null;
+          email: string | null;
+          role: string | null;
+          is_valid: boolean;
+          reason: string | null;
+        }[];
+      };
+      accept_workspace_invite: {
+        Args: { p_token: string };
+        Returns: Database["public"]["Tables"]["workspace_members"]["Row"];
       };
     };
     Enums: Record<string, never>;

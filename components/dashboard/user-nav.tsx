@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 
@@ -60,9 +61,11 @@ export function UserNav({ user }: UserNavProps) {
           <User className="h-4 w-4" />
           Perfil
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2">
-          <Settings className="h-4 w-4" />
-          Configurações do workspace
+        <DropdownMenuItem asChild className="gap-2">
+          <Link href="/settings">
+            <Settings className="h-4 w-4" />
+            Configurações do workspace
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2" onClick={handleSignOut}>
