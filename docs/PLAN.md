@@ -79,16 +79,15 @@ Supabase, ainda sem identidade visual aplicada (componentes shadcn padrão).
 - [ ] Página de detalhe do lead com timeline de atividades — _Colaborador: Frontend_
   - [x] Página de detalhe implementada com timeline somente leitura (registro de
     atividade é escopo da Milestone 4)
-- [ ] Server Actions de CRUD de leads (isolados por `workspace_id`) — _Colaborador: Backend_
-  - [x] `listLeads`/`getLead`/`createLead`/`updateLead`/`deleteLead`/`listWorkspaceMembers`
-    implementados em `app/(dashboard)/leads/actions.ts` com **dados fake em memória**
-    (`lib/leads/mock-data.ts`, 12 leads brasileiros) para destravar a interface sem
-    depender de um projeto Supabase configurado
-  - [ ] **Pendente:** trocar o data source fake pelo Supabase real (tabelas
-    `leads`/`activities`/`workspace_members` filtradas por `workspace_id`) assim que
-    `.env.local` tiver `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
-    preenchidos e a Milestone 1 tiver auth real (`DEV_WORKSPACE_ID`/`DEV_USER_ID` hoje
-    não são mais usados pelos leads)
+- [x] Server Actions de CRUD de leads (isolados por `workspace_id`) — _Colaborador: Backend_
+  - [x] `listLeads`/`getLead`/`createLead`/`updateLead`/`deleteLead` em
+    `app/(dashboard)/leads/actions.ts` consultando as tabelas reais `leads`/`activities`
+    via Supabase, filtradas por `workspace_id` (`getCurrentWorkspace()`); dados fake em
+    memória (`lib/leads/mock-data.ts`) removidos
+  - [x] `listWorkspaceMembers` movido para `lib/supabase/workspace.ts` (compartilhado
+    com o pipeline) e resolvido via nova tabela `public.profiles` (migration
+    `20260726020000_add_profiles.sql`), já que o client Supabase não lê `auth.users`
+    diretamente
 
 **Commit final:** `feat: leads CRUD ui with search and filters`
 
@@ -101,10 +100,13 @@ Supabase, ainda sem identidade visual aplicada (componentes shadcn padrão).
 
 **Entregas:**
 
-- [ ] Board Kanban com as 6 colunas de etapa — _Colaborador: Frontend_
-- [ ] Cards de negócio (título, valor, lead vinculado, responsável, prazo) — _Colaborador: Frontend_
-- [ ] Drag-and-drop com `@dnd-kit` + persistência de etapa via Server Action — _Colaborador: Frontend_
-- [ ] Modal de criação/edição de negócio — _Colaborador: Frontend_
+- [x] Board Kanban com as 6 colunas de etapa — _Colaborador: Frontend_
+- [x] Cards de negócio (título, valor, lead vinculado, responsável, prazo) — _Colaborador: Frontend_
+- [x] Drag-and-drop com `@dnd-kit` + persistência de etapa via Server Action — _Colaborador: Frontend_
+  - [x] `updateDealStage` em `app/(dashboard)/pipeline/actions.ts` grava a etapa direto
+    na tabela `deals` (Supabase real, filtrada por `workspace_id`); dados fake
+    (`lib/deals/mock-data.ts`) removidos
+- [x] Modal de criação/edição de negócio — _Colaborador: Frontend_
 
 **Commit final:** `feat: kanban pipeline with drag-and-drop persistence`
 
@@ -118,9 +120,13 @@ Supabase, ainda sem identidade visual aplicada (componentes shadcn padrão).
 **Entregas:**
 
 - [ ] Registro de atividade (ligação, e-mail, reunião, nota) vinculado ao lead — _Colaborador: Frontend_
-- [ ] Cards de métricas: total de leads, negócios abertos, valor do pipeline, taxa de conversão — _Colaborador: Frontend_
-- [ ] Gráfico de funil de vendas com Recharts — _Colaborador: Frontend_
-- [ ] Lista de negócios com prazo próximo do usuário logado — _Colaborador: Frontend_
+  - Timeline somente leitura já existe (Milestone 2); falta o formulário de registro
+- [x] Cards de métricas: total de leads, negócios abertos, valor do pipeline, taxa de conversão — _Colaborador: Frontend_
+  - [x] `getDashboardMetrics` em `app/(dashboard)/dashboard/actions.ts` calcula a partir
+    das tabelas `leads`/`deals` reais, filtradas por `workspace_id`
+- [x] Gráfico de funil de vendas com Recharts — _Colaborador: Frontend_
+- [x] Lista de negócios com prazo próximo do usuário logado — _Colaborador: Frontend_
+  - [x] `getSalesFunnel`/`getUpcomingDeals` também migrados do mock para o Supabase real
 
 **Commit final:** `feat: activity log and metrics dashboard`
 

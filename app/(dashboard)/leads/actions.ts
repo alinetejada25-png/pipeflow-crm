@@ -1,127 +1,178 @@
 "use server";
 
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
-import { MOCK_ACTIVITIES, MOCK_LEADS, MOCK_MEMBERS } from "@/lib/leads/mock-data";
-import type { Activity, Lead, LeadFilters, LeadInput, WorkspaceMember } from "@/types/lead";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentWorkspace, listWorkspaceMembers } from "@/lib/supabase/workspace";
+import type { Activity, Lead, LeadFilters, LeadInput } from "@/types/lead";
+import type { Database } from "@/types/supabase";
 
-/**
- * Dados fake em memória para a fase de interface (Milestone 2), sem depender de
- * um projeto Supabase configurado. Quando a integração real entrar, estas
- * funções passam a consultar as tabelas `leads`/`activities` filtradas por
- * `workspace_id`, mantendo as mesmas assinaturas.
- */
-const leadsStore: Lead[] = MOCK_LEADS.map((lead) => ({ ...lead }));
-const activitiesStore: Record<string, Activity[]> = Object.fromEntries(
-  Object.entries(MOCK_ACTIVITIES).map(([leadId, activities]) => [
-    leadId,
-    activities.map((activity) => ({ ...activity })),
-  ]),
-);
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type ActivityRow = Database["public"]["Tables"]["activities"]["Row"];
 
-function matchesSearch(lead: Lead, term: string): boolean {
-  const normalized = term.trim().toLowerCase();
-  if (!normalized) return true;
-  return (
-    lead.name.toLowerCase().includes(normalized) ||
-    (lead.email?.toLowerCase().includes(normalized) ?? false) ||
-    (lead.company?.toLowerCase().includes(normalized) ?? false)
-  );
+function toLead(row: LeadRow): Lead {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    company: row.company,
+    jobTitle: row.job_title,
+    status: row.status as Lead["status"],
+    ownerId: row.owner_id,
+    source: row.source,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toActivity(row: ActivityRow): Activity {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    leadId: row.lead_id,
+    authorId: row.author_id,
+    type: row.type,
+    description: row.description,
+    occurredAt: row.occurred_at,
+    createdAt: row.created_at,
+  };
 }
 
 export async function listLeads(filters: LeadFilters = {}): Promise<Lead[]> {
-  let result = [...leadsStore];
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  let query = supabase
+    .from("leads")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
 
   if (filters.status) {
-    result = result.filter((lead) => lead.status === filters.status);
+    query = query.eq("status", filters.status);
   }
 
   if (filters.ownerId) {
-    result = result.filter((lead) => lead.ownerId === filters.ownerId);
+    query = query.eq("owner_id", filters.ownerId);
   }
 
   if (filters.dateFrom) {
-    const from = new Date(`${filters.dateFrom}T00:00:00.000Z`).getTime();
-    result = result.filter((lead) => new Date(lead.createdAt).getTime() >= from);
+    query = query.gte("created_at", `${filters.dateFrom}T00:00:00.000Z`);
   }
 
   if (filters.dateTo) {
-    const to = new Date(`${filters.dateTo}T23:59:59.999Z`).getTime();
-    result = result.filter((lead) => new Date(lead.createdAt).getTime() <= to);
+    query = query.lte("created_at", `${filters.dateTo}T23:59:59.999Z`);
   }
 
   if (filters.search) {
-    result = result.filter((lead) => matchesSearch(lead, filters.search!));
+    const term = filters.search.trim();
+    if (term) {
+      query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,company.ilike.%${term}%`);
+    }
   }
 
-  return result.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map(toLead);
 }
 
-export async function listWorkspaceMembers(): Promise<WorkspaceMember[]> {
-  return MOCK_MEMBERS;
-}
+export { listWorkspaceMembers };
 
 export async function getLead(id: string): Promise<Lead | null> {
-  return leadsStore.find((lead) => lead.id === id) ?? null;
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data ? toLead(data) : null;
 }
 
 export async function getLeadActivities(leadId: string): Promise<Activity[]> {
-  const activities = activitiesStore[leadId] ?? [];
-  return [...activities].sort(
-    (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
-  );
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .eq("lead_id", leadId)
+    .order("occurred_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toActivity);
 }
 
 export async function createLead(input: LeadInput): Promise<{ id: string }> {
-  const now = new Date().toISOString();
-  const lead: Lead = {
-    id: randomUUID(),
-    workspaceId: "mock-workspace",
-    name: input.name,
-    email: input.email || null,
-    phone: input.phone || null,
-    company: input.company || null,
-    jobTitle: input.jobTitle || null,
-    status: input.status,
-    ownerId: input.ownerId || null,
-    source: "manual",
-    createdAt: now,
-    updatedAt: now,
-  };
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  leadsStore.unshift(lead);
-  activitiesStore[lead.id] = [];
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({
+      workspace_id: workspaceId,
+      name: input.name,
+      email: input.email || null,
+      phone: input.phone || null,
+      company: input.company || null,
+      job_title: input.jobTitle || null,
+      status: input.status,
+      owner_id: input.ownerId || null,
+      source: "manual",
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/leads");
-  return { id: lead.id };
+  return { id: data.id };
 }
 
 export async function updateLead(id: string, input: LeadInput): Promise<void> {
-  const lead = leadsStore.find((item) => item.id === id);
-  if (!lead) throw new Error("Lead não encontrado.");
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  lead.name = input.name;
-  lead.email = input.email || null;
-  lead.phone = input.phone || null;
-  lead.company = input.company || null;
-  lead.jobTitle = input.jobTitle || null;
-  lead.status = input.status;
-  lead.ownerId = input.ownerId || null;
-  lead.updatedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      name: input.name,
+      email: input.email || null,
+      phone: input.phone || null,
+      company: input.company || null,
+      job_title: input.jobTitle || null,
+      status: input.status,
+      owner_id: input.ownerId || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("workspace_id", workspaceId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/leads");
   revalidatePath(`/leads/${id}`);
 }
 
 export async function deleteLead(id: string): Promise<void> {
-  const index = leadsStore.findIndex((lead) => lead.id === id);
-  if (index === -1) throw new Error("Lead não encontrado.");
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  leadsStore.splice(index, 1);
-  delete activitiesStore[id];
+  const { error } = await supabase
+    .from("leads")
+    .delete()
+    .eq("workspace_id", workspaceId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/leads");
 }

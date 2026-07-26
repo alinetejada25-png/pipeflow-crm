@@ -1,67 +1,123 @@
 "use server";
 
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
-import { MOCK_DEALS } from "@/lib/deals/mock-data";
-import { MOCK_LEADS, MOCK_MEMBERS } from "@/lib/leads/mock-data";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentWorkspace, listWorkspaceMembers } from "@/lib/supabase/workspace";
 import type { Lead, WorkspaceMember } from "@/types/lead";
 import { DEAL_STAGES, type Deal, type DealInput, type DealStage } from "@/types/deal";
+import type { Database } from "@/types/supabase";
 
-/**
- * Dados fake em memória para a fase de interface (Milestone 3), no mesmo padrão
- * de app/(dashboard)/leads/actions.ts. Quando a integração real entrar, estas
- * funções passam a consultar a tabela `deals` filtrada por `workspace_id`,
- * mantendo as mesmas assinaturas.
- */
-const dealsStore: Deal[] = MOCK_DEALS.map((deal) => ({ ...deal }));
+type DealRow = Database["public"]["Tables"]["deals"]["Row"];
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+
+function toDeal(row: DealRow): Deal {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    title: row.title,
+    value: Number(row.value),
+    leadId: row.lead_id,
+    ownerId: row.owner_id,
+    stage: row.stage,
+    dueDate: row.due_date,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toLead(row: LeadRow): Lead {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    company: row.company,
+    jobTitle: row.job_title,
+    status: row.status as Lead["status"],
+    ownerId: row.owner_id,
+    source: row.source,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 export async function listDeals(): Promise<Deal[]> {
-  return [...dealsStore].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-  );
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toDeal);
 }
 
 export async function listPipelineLeads(): Promise<Lead[]> {
-  return MOCK_LEADS;
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toLead);
 }
 
 export async function listPipelineMembers(): Promise<WorkspaceMember[]> {
-  return MOCK_MEMBERS;
+  return listWorkspaceMembers();
 }
 
 export async function createDeal(input: DealInput): Promise<{ id: string }> {
-  const now = new Date().toISOString();
-  const deal: Deal = {
-    id: randomUUID(),
-    workspaceId: "mock-workspace",
-    title: input.title,
-    value: input.value,
-    leadId: input.leadId,
-    ownerId: input.ownerId || null,
-    stage: input.stage,
-    dueDate: input.dueDate || null,
-    createdAt: now,
-    updatedAt: now,
-  };
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  dealsStore.unshift(deal);
+  const { data, error } = await supabase
+    .from("deals")
+    .insert({
+      workspace_id: workspaceId,
+      title: input.title,
+      value: input.value,
+      lead_id: input.leadId,
+      owner_id: input.ownerId || null,
+      stage: input.stage,
+      due_date: input.dueDate || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/pipeline");
-  return { id: deal.id };
+  return { id: data.id };
 }
 
 export async function updateDeal(id: string, input: DealInput): Promise<void> {
-  const deal = dealsStore.find((item) => item.id === id);
-  if (!deal) throw new Error("Negócio não encontrado.");
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  deal.title = input.title;
-  deal.value = input.value;
-  deal.leadId = input.leadId;
-  deal.ownerId = input.ownerId || null;
-  deal.stage = input.stage;
-  deal.dueDate = input.dueDate || null;
-  deal.updatedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("deals")
+    .update({
+      title: input.title,
+      value: input.value,
+      lead_id: input.leadId,
+      owner_id: input.ownerId || null,
+      stage: input.stage,
+      due_date: input.dueDate || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("workspace_id", workspaceId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/pipeline");
 }
@@ -69,20 +125,31 @@ export async function updateDeal(id: string, input: DealInput): Promise<void> {
 export async function updateDealStage(id: string, stage: DealStage): Promise<void> {
   if (!DEAL_STAGES.includes(stage)) throw new Error("Etapa inválida.");
 
-  const deal = dealsStore.find((item) => item.id === id);
-  if (!deal) throw new Error("Negócio não encontrado.");
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  deal.stage = stage;
-  deal.updatedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("deals")
+    .update({ stage, updated_at: new Date().toISOString() })
+    .eq("workspace_id", workspaceId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/pipeline");
 }
 
 export async function deleteDeal(id: string): Promise<void> {
-  const index = dealsStore.findIndex((deal) => deal.id === id);
-  if (index === -1) throw new Error("Negócio não encontrado.");
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
 
-  dealsStore.splice(index, 1);
+  const { error } = await supabase
+    .from("deals")
+    .delete()
+    .eq("workspace_id", workspaceId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/pipeline");
 }
