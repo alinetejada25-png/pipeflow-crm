@@ -19,9 +19,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar workspaces={workspaces} activeWorkspaceId={workspaceId} />
       </aside>
 
-      <div className="flex flex-1 flex-col md:pl-64">
+      <div className="flex min-w-0 flex-1 flex-col md:pl-64">
         <Header user={user} workspaces={workspaces} activeWorkspaceId={workspaceId} />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

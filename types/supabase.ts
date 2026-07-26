@@ -3,6 +3,7 @@
 //   - 20260725000000_init_schema.sql (workspaces, workspace_members, leads, deals, activities)
 //   - 20260726000000_add_subscriptions.sql (subscriptions)
 //   - 20260726010000_enable_rls.sql (RPC create_workspace)
+//   - 20260726020000_add_profiles.sql (profiles)
 
 export type WorkspacePlan = "free" | "pro";
 export type WorkspaceMemberRole = "admin" | "membro";
@@ -241,6 +242,27 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      profiles: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          email: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       subscriptions: {
         Row: {

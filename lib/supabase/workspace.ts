@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
+import type { WorkspaceMember } from "@/types/lead";
 import type { WorkspacePlan } from "@/types/supabase";
 
 const ACTIVE_WORKSPACE_COOKIE = "workspace_id";
@@ -83,6 +84,31 @@ export async function listUserWorkspaces(): Promise<WorkspaceSummary[]> {
     .in("id", workspaceIds);
 
   return workspaces ?? [];
+}
+
+export async function listWorkspaceMembers(): Promise<WorkspaceMember[]> {
+  const supabase = await createClient();
+  const { workspaceId } = await getCurrentWorkspace();
+
+  const { data: memberships, error } = await supabase
+    .from("workspace_members")
+    .select("user_id")
+    .eq("workspace_id", workspaceId);
+
+  if (error) throw new Error(error.message);
+  if (!memberships || memberships.length === 0) return [];
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, name")
+    .in(
+      "id",
+      memberships.map((membership) => membership.user_id),
+    );
+
+  if (profilesError) throw new Error(profilesError.message);
+
+  return (profiles ?? []).map((profile) => ({ userId: profile.id, name: profile.name }));
 }
 
 export async function getCurrentUserProfile(): Promise<CurrentUserProfile> {
