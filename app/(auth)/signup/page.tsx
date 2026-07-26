@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 import { Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,17 @@ interface FormErrors {
 }
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/onboarding";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,7 +85,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { name },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
 
@@ -90,7 +100,7 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      router.push("/onboarding");
+      router.push(next);
       router.refresh();
       return;
     }
@@ -201,7 +211,10 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Já tem uma conta?{" "}
-          <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
+          <Link
+            href={next !== "/onboarding" ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+            className="font-medium text-foreground underline underline-offset-4"
+          >
             Entrar
           </Link>
         </p>

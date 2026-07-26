@@ -140,11 +140,26 @@ hardening de backend sobre a interface já construída.
 
 **Entregas:**
 
-- [ ] Políticas de Row Level Security para todas as tabelas por `workspace_id` — _Colaborador: Backend_
-- [ ] Convite de colaborador por e-mail via Resend — _Colaborador: Backend_
-- [ ] Papéis `admin`/`membro` com checagem no backend (Server Actions e RLS) — _Colaborador: Backend_
-- [ ] Dropdown de troca de workspace na sidebar — _Colaborador: Frontend_
-- [ ] Tela de configurações do workspace (membros, papéis) — _Colaborador: Frontend_
+- [x] Políticas de Row Level Security para todas as tabelas por `workspace_id` — _Colaborador: Backend_
+  - [x] `is_workspace_member`/`is_workspace_admin` + policies em
+    `20260726010000_enable_rls.sql`, cobrindo `workspaces`, `workspace_members`,
+    `leads`, `deals`, `activities`, `subscriptions`
+- [x] Convite de colaborador por e-mail via Resend — _Colaborador: Backend_
+  - [x] Tabela `workspace_invites` (`20260726030000_add_workspace_invites.sql`) com
+    RLS admin-only e RPCs `get_invite_preview`/`accept_workspace_invite`; envio de
+    e-mail via Resend em `lib/resend/` e Server Actions em
+    `app/(dashboard)/settings/actions.ts`; fluxo de aceite em `/(auth)/accept-invite`
+- [x] Papéis `admin`/`membro` com checagem no backend (Server Actions e RLS) — _Colaborador: Backend_
+  - [x] `getCurrentUserRole()` em `lib/supabase/workspace.ts` + guarda de admin em
+    todas as Server Actions de convite/membros, além das policies do banco
+- [x] Dropdown de troca de workspace na sidebar — _Colaborador: Frontend_
+  - [x] `WorkspaceSwitcher` já implementado em `components/dashboard/`
+- [x] Tela de configurações do workspace (membros, papéis) — _Colaborador: Frontend_
+  - [x] `app/(dashboard)/settings/page.tsx` com lista de membros, troca de papel,
+    remoção, convite e lista de convites pendentes (cancelar/reenviar)
+- [x] Limite de colaboradores do plano Free (2 colaboradores) — _Colaborador: Backend_
+  - [x] Bloqueio no envio do convite (`inviteMember`) e defesa redundante na
+    RPC `accept_workspace_invite`, via `FREE_PLAN_MEMBER_LIMIT`
 
 **Commit final:** `feat: multi-tenant workspaces with RLS and role-based access`
 
@@ -197,7 +212,8 @@ sobre toda a interface já funcional, sem alterar comportamento.
 - [ ] Stripe Checkout a partir da tela de planos — _Colaborador: Backend_
 - [ ] Webhook de ativação/desativação de plano — _Colaborador: Backend_
 - [ ] Customer Portal para gerenciar assinatura — _Colaborador: Backend_
-- [ ] Enforcement de limites do plano Free (2 colaboradores / 50 leads) — _Colaborador: Backend_
+- [ ] Enforcement de limite de leads do plano Free (50 leads) — _Colaborador: Backend_
+  - Limite de colaboradores (2) já aplicado na Milestone 5 (`feat/collaboration`)
 
 **Commit final:** `feat: stripe subscriptions with plan limit enforcement`
 
